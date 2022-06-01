@@ -29,18 +29,17 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < n; i++){
       solidTarget[i] = targetArr[i+1];
     }
-    //fileDataName = Form("/eos/user/m/mbarrial/Data/VecSum_%s.root", solidTarget);
-    fileDataName = Form("/home/matias/proyecto/Piones/Data/VecSum/VecSum_%s.root", solidTarget);
+    fileDataName = Form("/eos/user/m/mbarrial/Data/VecSum_%s.root", solidTarget);
+    //fileDataName = Form("/home/matias/proyecto/Piones/Data/VecSum/VecSum_%s.root", solidTarget);
   } else{
-    //fileDataName = Form("/eos/user/m/mbarrial/Data/VecSum_%s.root", targetArr);
-    fileDataName = Form("/home/matias/proyecto/Piones/Data/VecSum/VecSum_%s.root", targetArr);
+    fileDataName = Form("/eos/user/m/mbarrial/Data/VecSum_%s.root", targetArr);
+    //fileDataName = Form("/home/matias/proyecto/Piones/Data/VecSum/VecSum_%s.root", targetArr);
   }
 
   // Open the input and output files
-  //TFile *fileData= new TFile("/eos/user/m/mbarrial/Data/VecSum_%s.root","READ");
   TFile* fileData  = new TFile(fileDataName,"READ");
-  //TFile *fileOutput= new TFile(Form("/eos/user/m/mbarrial/Broad/AccCorrData/corr_data_Phi_%s.root"),"RECREATE");
-  TFile *fileOutput= new TFile("Acce.root","RECREATE");
+  TFile *fileOutput= new TFile(Form("/eos/user/m/mbarrial/Data/Acc/corr_data_Phi_%s.root", targetArr), "RECREATE");
+  //TFile *fileOutput= new TFile("Acce.root","RECREATE");
   gROOT->cd();
 
   // Create some variables to use inside the for loops
@@ -104,14 +103,14 @@ int main(int argc, char* argv[]) {
             // Save the histograms in the output file
             fileOutput->cd();
 
-            histData->Write(Form("Data_%s_%i%i%i%i_%i",                   targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
+            //histData->Write(Form("Data_%s_%i%i%i%i_%i",                   targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
             histDataCorr2->Write(Form("DataCorr2_%s_%i%i%i%i_%i",         targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
             histDataCorr->Write(Form("DataCorr_%s_%i%i%i%i_%i",           targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
             histFalPos->Write(Form("FalPosFactor_%s_%i%i%i%i_%i",         targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
             histAccFactors->Write(Form("AcceFactor_%s_%i%i%i%i_%i",       targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histThrown->Write(Form("histThrown_%s_%i%i%i%i_%i",           targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histDetected->Write(Form("histDetected_%s_%i%i%i%i_%i",       targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histTotDetected->Write(Form("histTotDetected_%s_%i%i%i%i_%i", targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
+            //histThrown->Write(Form("histThrown_%s_%i%i%i%i_%i",           targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
+            //histDetected->Write(Form("histDetected_%s_%i%i%i%i_%i",       targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
+            //histTotDetected->Write(Form("histTotDetected_%s_%i%i%i%i_%i", targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
 
             gROOT->cd();
 
