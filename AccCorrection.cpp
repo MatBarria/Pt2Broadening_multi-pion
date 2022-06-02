@@ -16,11 +16,6 @@ int main(int argc, char* argv[]) {
   char targetArr[n + 1];
   strcpy(targetArr, target.c_str());
 
-  int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_Pt2+1][N_Phi+1];
-
-  SetMatrixValue0(matrix);
-  GenMatrixAcc(targetArr,matrix);
-
   // Select the solid target
 
   TString fileDataName;
