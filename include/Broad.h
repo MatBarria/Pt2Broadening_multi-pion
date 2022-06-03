@@ -17,7 +17,7 @@ char DC[3] = {'D', 'C', '\0' }; char DFe[4] = {'D', 'F', 'e', '\0'}; char DPb[4]
 
 char C[2]  = {'C', '\0'}; char Fe[3]  = {'F', 'e', '\0'}; char Pb[3]  = {'P', 'b', '\0'};
 
-int empty_histo(TH1F* h) {
+int EmptyHist(TH1F* h) {
 
   int empty = 0;
   for(int i = 1 ; i <= h->GetNbinsX() ; i++) {
@@ -27,8 +27,10 @@ int empty_histo(TH1F* h) {
   else { return 0; }
 }
 
+//Integrate the PhiPQ histograms and generate a Pt2 histogram for each Q2, Nu, Zh bin
 void PhiIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
 
+  std::cout << Form("Target %s",target) << std::endl;
   for(int nPion = 1; nPion <= N_PION; nPion++) { // Loops in every number of pion
     for(int Q2Counter = 0 ; Q2Counter < N_Q2; Q2Counter++) { // Loops in every Q2 bin
       for(int NuCounter = 0 ; NuCounter < N_Nu; NuCounter++) { // Loops in every Nu bin
@@ -37,10 +39,10 @@ void PhiIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
 	        TH1F* histPt2 = new TH1F(Form("corr_data_Pt2_%s_%i%i%i_%i_CLEAN_INTERPOLATED", target, Q2Counter, NuCounter, ZhCounter, nPion), "", N_Pt2, Pt2_MIN, Pt2_MAX);
           for(int Pt2Counter = 0 ; Pt2Counter < N_Pt2 ; Pt2Counter++) { // Loops in every Pt2 bin
             // Take the his for this bins
-	          TH1F* histPhi = (TH1F*) inputFile->Get(Form("corr_data_%s_%i%i%i%i_%i", target, Q2Counter, NuCounter, ZhCounter, Pt2Counter, nPion));
+	          TH1F* histPhi = (TH1F*) inputFile->Get(Form("DataCorr2_%s_%i%i%i%i_%i", target, Q2Counter, NuCounter, ZhCounter, Pt2Counter, nPion));
             // If the histogram is null or empty skip this Pt2 bin
             if(histPhi == NULL){ continue; }
-	          if(empty_histo(histPhi) == 1){ continue; }
+	          if(EmptyHist(histPhi) == 1){ continue; }
             // Integrate on PhiPQ
 	          // double errors_array[1] = {};
             double error;
@@ -49,9 +51,10 @@ void PhiIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
 	          histPt2->SetBinContent(Pt2Counter + 1, integral);
 	          // histPt2->SetBinError(Pt2Counter + 1, errors_array[0]);
             histPt2->SetBinError(Pt2Counter + 1, error);
+            delete histPhi;
 	        }// End Pt2 loop
           // If the histogram if not empty, save it
-	        if(empty_histo(histPt2) == 0) {
+	        if(EmptyHist(histPt2) == 0) {
 	          outputFile->cd();
 	          histPt2->Write();
             gROOT->cd();
@@ -61,9 +64,10 @@ void PhiIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
       }// End Nu loop
     }// End Q2 loop
   }// End number pion event loop
-
+std::cout << "end" << std::endl;
 }
 
+// Integrate the Nu and Zh histogram
 void NuZhIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
 
   for(int nPion = 1; nPion <= N_PION ; nPion++) { // Loops in every number of pion
@@ -73,7 +77,7 @@ void NuZhIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
       TH1F* histPt2Integrated = new TH1F(Form("corr_data_Pt2_%s_%i", target, Q2Counter), "", N_Pt2, Pt2_MIN, Pt2_MAX);
       for(int NuCounter = 0 ; NuCounter < N_Nu ; NuCounter++) { // Loops in every Nu bin
         // Starts in the second bin because there is not broadening iz Zh<0.2
-	      for(int ZhCounter = 1 ; ZhCounter < N_Zh ; ZhCounter++) { // Loops in every Zh bin
+	      for(int ZhCounter = 2 ; ZhCounter < N_Zh ; ZhCounter++) { // Loops in every Zh bin
 	        TH1F* histPt2 = (TH1F*) inputFile->Get(Form("corr_data_Pt2_%s_%i%i%i_%i_CLEAN_INTERPOLATED", target, Q2Counter, NuCounter, ZhCounter, nPion));
           // Sum the histograms for every bin of Zh and Nu
 	        histPt2Integrated->Add(histPt2);
@@ -139,7 +143,7 @@ void Q2ZhIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
     for(int NuCounter = 0 ; NuCounter < N_Nu ; NuCounter++) { // Loops in every Nu bin
       TH1F* histPt2Integrated = new TH1F(Form("corr_data_Pt2_%s_%i", target, NuCounter), "", N_Pt2, Pt2_MIN, Pt2_MAX);
       // Starts in the second bin because there is not broadening in Zh<0.2
-      for(int ZhCounter = 1 ; ZhCounter < N_Zh ; ZhCounter++) { // Loops in every Zh bin
+      for(int ZhCounter = 2 ; ZhCounter < N_Zh ; ZhCounter++) { // Loops in every Zh bin
 	      for(int Q2Counter = 0 ; Q2Counter < N_Q2 ; Q2Counter++) { // Loops in every Q2 bin
 	        TH1F* histPt2 =  (TH1F*) inputFile->Get(Form("corr_data_Pt2_%s_%i%i%i_%i_CLEAN_INTERPOLATED", target, Q2Counter, NuCounter, ZhCounter, nPion));
 	        histPt2Integrated->Add(histPt2);
@@ -170,7 +174,7 @@ void Q2NuZhIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
     // To save the sum of the histograms
     TH1F* histPt2Integrated = new TH1F(Form("corr_data_%s_Pt2", target), "", N_Pt2, Pt2_MIN, Pt2_MAX);
     // Starts in the second bin because there is not broadening iz Zh<0.2
-    for(int ZhCounter = 1 ; ZhCounter < N_Zh ; ZhCounter++) { // Loops in every Zh bin
+    for(int ZhCounter = 2 ; ZhCounter < N_Zh ; ZhCounter++) { // Loops in every Zh bin
       for(int NuCounter = 0 ; NuCounter < N_Nu ; NuCounter++) { // Loops in every Q2 bin
 	      for(int Q2Counter = 0 ; Q2Counter < N_Q2 ; Q2Counter++) { // Loops in every Nu bin
           // Sum the histograms for every bin of Q2 and Nu
@@ -197,7 +201,7 @@ void Q2NuZhIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
 
 void CallPhiIntegration(TString inputDirectory, TString outputDirectory) {
 
-  TFile* inputFile  = new TFile(inputDirectory  + "corr_data_Phi.root", "READ");
+  TFile* inputFile  = new TFile(inputDirectory  + "corr_data_Phi1.root", "READ");
   TFile* outputFile = new TFile(outputDirectory + "corr_data_Pt2_processed.root", "RECREATE");
   gROOT->cd();
 
@@ -543,7 +547,7 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleSize(0.04,"XY");
 
   //mg->GetYaxis()->SetRangeUser(0.,0.059);
-  mg->GetYaxis()->SetRangeUser(0.,0.12);
+  mg->GetYaxis()->SetRangeUser(0.,0.03);
   mg->GetXaxis()->SetRangeUser(.9,4.1);
   mg->GetXaxis()->SetTitle("Q^{2}[GeV^{2}]");
   mg->GetXaxis()->CenterTitle();
@@ -623,6 +627,7 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
     g[k][2]->SetMarkerSize(1.7);
   }
 
+
   TLegend* legendTarget = GenTLegendTarget(g);
   TLegend* legendNPion  = GenTLegendNPion(g);
 
@@ -646,7 +651,7 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
   gStyle->SetTitleFont(62, "XY");
   gStyle->SetTitleSize(0.04, "XY");
 
-  mg->GetYaxis()->SetRangeUser(0.,0.18);
+  mg->GetYaxis()->SetRangeUser(0.,0.03);
 //mg->GetYaxis()->SetRangeUser(0.,0.45);;
   //mg->GetXaxis()->SetRangeUser(0.,0.75);
   mg->GetXaxis()->SetRangeUser(Zh_MIN, Zh_MAX);
@@ -711,9 +716,9 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    // SetErrorXNull(g[0][nPion-1]);
-    // SetErrorXNull(g[1][nPion-1]);
-    // SetErrorXNull(g[2][nPion-1]);
+    SetErrorXNull(g[0][nPion-1]);
+    SetErrorXNull(g[1][nPion-1]);
+    SetErrorXNull(g[2][nPion-1]);
 
     for(int i = 0; i < N_STARGETS; i++) {
       delete histSolid[i];
@@ -730,6 +735,8 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
     g[k][1]->SetMarkerSize(.6);
     g[k][2]->SetMarkerStyle(27);
     g[k][2]->SetMarkerSize(1.2);
+    SetXShift(g[k][0],-0.035);
+    SetXShift(g[k][2],0.035);
   }
 
   TCanvas* c = new TCanvas("c", "", 800, 600);
@@ -760,7 +767,7 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleFont(62,"XY");
   gStyle->SetTitleSize(0.04,"XY");
 
-  mg->GetYaxis()->SetRangeUser(0.,0.1);
+  mg->GetYaxis()->SetRangeUser(0.,0.03);
   //mg->GetYaxis()->SetRangeUser(0.012,0.08);
   //mg->GetYaxis()->SetRangeUser(0.,0.2);
   mg->GetXaxis()->SetRangeUser(2, 6);

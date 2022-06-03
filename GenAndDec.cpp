@@ -23,20 +23,16 @@ int main(int argc, char* argv[]) {
 
   // Select the solid target
 
-  TFile *fileOutput= new TFile(Form("/eos/user/m/mbarrial/Data/Acc/Gen_Dec_%s.root", targetArr), "RECREATE");
-  //TFile *fileOutput= new TFile("Acce.root","RECREATE");
+  //TFile *fileOutput= new TFile(Form("/eos/user/m/mbarrial/Data/Acc/Gen_Dec_%s.root", targetArr), "RECREATE");
+  TFile *fileOutput= new TFile("Acce.root","RECREATE");
   gROOT->cd();
-
-  // Create some variables to use inside the for loops
-  TString tupleDataName;
-  TCut Q2_cut, Nu_cut, Zh_cut, Pt2_cut, YC_cut, VC_data, cuts_data;
 
   // Create all the necessary histograms
   TH1F *histDetected    = new TH1F("histDetected",    "", N_Phi, -180, 180);
   TH1F *histTotDetected = new TH1F("histTotDetected", "", N_Phi, -180, 180);
   TH1F *histThrown      = new TH1F("histThrown",      "", N_Phi, -180, 180);
 
-  // Store the sum of the weights A.K.A the erros (in the other histograms if save it by other methods)
+  // Store the sum of the weights A.K.A the errors
   histThrown->Sumw2();
   histTotDetected->Sumw2();
   histDetected->Sumw2();
@@ -45,6 +41,7 @@ int main(int argc, char* argv[]) {
     for(int Q2Counter = 0; Q2Counter < N_Q2; Q2Counter++) { // Loops in every Q2 bin
       for(int NuCounter = 0; NuCounter < N_Nu; NuCounter++) { // Loops in every Nu bin
         for(int ZhCounter = 0; ZhCounter < N_Zh; ZhCounter++) { // Loops in every Zh bin
+          std::cout << "Bin selected: " << gen << Q2Counter << NuCounter << ZhCounter << std::endl;
           for(int Pt2Counter = 0; Pt2Counter < N_Pt2; Pt2Counter++) { // Loops in every Pt2 bin
 
             // Generate histograms of the all dectected pion, all generated pion, and the pions that was correct dectected
@@ -70,10 +67,8 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-    delete ntuple_data;
   }
   fileOutput->Close();
-  fileData->Close();
   t.Print();
 
 }

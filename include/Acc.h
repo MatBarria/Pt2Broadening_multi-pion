@@ -11,6 +11,7 @@
 #include "TROOT.h"
 #include "TH1.h"
 #include "TCut.h"
+#include "TEventList.h"
 
 // Generated a matrix of the number of events of N generated pion detected as M pion events for each bean
 // matrix[generated][detected][Q2Bin][NuBin][ZhBin][Pt2Bin][PhiBin];
@@ -47,7 +48,7 @@ void GenMatrixAcc(char targetArr[], int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_P
           inputName = Form("/eos/user/m/mbarrial/out/GetSimpleTuple_HSim/%s%i_yshiftm03/pruned%s_%i.root", targetArr,folder,targetArr,sim);
         }
       }
-      std::cout << "Checking directory " << folder << "  " << sim << std::endl;
+      //std::cout << "Checking directory " << folder << "  " << sim << std::endl;
       //inputName = Form("/home/matias/proyecto/Piones/Data/Simul/pruned%s_%i.root",targetArr ,sim);
       // Open the file and check if it's exist
       TFile* fSource = new TFile(inputName,"READ");
@@ -76,12 +77,12 @@ void GenMatrixAcc(char targetArr[], int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_P
       for(int i = 0; i < tuple->GetEntries(); i++) {// Loops in every generated particle
         tuple->GetEntry(i);
         // Check the bin of Q2 for the event
+        Q2Bin = N_Q2;
+        NuBin = N_Nu;
         for(int j = 0; j < N_Q2; j++ ) { // Loops in every Q2 bin
           if(vars[3] > Q2_BINS[j] && vars[3] < Q2_BINS[j+1]) {
             Q2Bin = j;
             break;
-          } else {
-            Q2Bin = N_Q2;
           }
         }
         // Check the bin of Nu for the event
@@ -89,8 +90,6 @@ void GenMatrixAcc(char targetArr[], int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_P
           if(vars[4] > Nu_BINS[j] && vars[4] < Nu_BINS[j+1]) {
             NuBin = j;
             break;
-          } else {
-            NuBin = N_Nu;
           }
         }
         // Check if the generated paricle is a pion+
@@ -140,12 +139,13 @@ void GenMatrixAcc(char targetArr[], int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_P
         vars[7] = vec->Phi()*TMath::RadToDeg()-180;
         delete vec;
         // Check the bin of Zh sum for the event
+        ZhBin = N_Zh;
+        Pt2Bin = N_Pt2;
+        PhiBin = N_Phi;
         for(int j = 0; j < N_Zh; j++ ) { // Loops in every Zhsum bin
           if(vars[5] > Zh_BINS[j] && vars[5] < Zh_BINS[j+1]) {
             ZhBin = j;
             break;
-          } else {
-            ZhBin = N_Zh;
           }
         }
         // Check the bin of Pt2 for the event
@@ -153,8 +153,6 @@ void GenMatrixAcc(char targetArr[], int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_P
           if(vars[6] > Pt2_BINS[j] && vars[6] < Pt2_BINS[j+1]) {
             Pt2Bin = j;
             break;
-          } else {
-            Pt2Bin = N_Pt2;
           }
         }
         // Check the bin of Phi for the event
@@ -162,8 +160,6 @@ void GenMatrixAcc(char targetArr[], int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_P
           if(vars[7] > Phi_BINS[j] && vars[7] < Phi_BINS[j+1]) {
             PhiBin = j;
             break;
-          } else {
-            PhiBin = N_Phi;
           }
         }
         // Add one to the correspond matrix element
@@ -240,6 +236,41 @@ void GenDetected(int matrix[5][5][N_Q2+1][N_Nu+1][N_Zh+1][N_Pt2+1][N_Phi+1], TH1
 
   for(int PhiCounter = 0; PhiCounter < N_Phi; PhiCounter++) { // Loops in every PhiPQ bin
     histDetected->Fill(-179.5 + Delta_Phi*PhiCounter, matrix[nPion][nPion][Q2Bin][NuBin][ZhBin][Pt2Bin][PhiCounter]);
+  }
+
+}
+
+// If the histogram if empty return 1 if not return 0
+int EmptyHist(TH1F* h) {
+
+  int empty = 0;
+  for(int i = 1 ; i <= h->GetNbinsX() ; i++) {
+    if(h->GetBinContent(i) == 0){ empty++; }
+  }
+  if(empty == h->GetNbinsX()) { return 1; }
+  else { return 0; }
+
+}
+
+// void rec_histo_process(TH1F* h) {
+//   /*Here is applied the condition that Naccept>1*/
+//   for(Int_t bin = 1; bin <= h->GetNbinsX(); bin++) {
+//     if(h->GetBinContent(bin) == 1) {
+//       h->SetBinContent(bin, 0);
+//       h->SetBinError(bin, 0);
+//     }
+//   }
+// }
+
+// If Acceptance Factor > 1  set it to 0
+void AccHist1(TH1F* h) {
+
+  /*Here is applied the condition that acc<1*/
+  for(Int_t bin = 1; bin <= h->GetNbinsX(); bin++) {
+    if(h->GetBinContent(bin) > 1) {
+      h->SetBinContent(bin, 0);
+      h->SetBinError(bin, 0);
+    }
   }
 
 }
