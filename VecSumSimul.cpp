@@ -1,4 +1,12 @@
-#include "Acc.h"
+#include <iostream>
+#include <string>
+#include "TMath.h"
+#include "TString.h"
+#include "TFile.h"
+#include "TNtuple.h"
+#include "TVector2.h"
+#include "TStopwatch.h"
+#include "TROOT.h"
 
 int main(int argc, char* argv[]) {
 
@@ -22,7 +30,8 @@ int main(int argc, char* argv[]) {
 
   // Set the variables that we want to save
   const char* VarList = "Gen:Dec:Q2:Nu:Zh:Pt2:PhiPQ";
-  TNtuple* sumTuple;
+  TNtuple* sumTuple = new TNtuple("ntuple_sim", "", VarList);
+  // Tuple to store the filter data
 
   for(int folder = 1; folder < 10; folder++) { // Loops in every directory
     for(int sim = 1; sim < 500; sim++) { // Loops in every simulation of the directory
@@ -59,9 +68,6 @@ int main(int argc, char* argv[]) {
       }
 
       gROOT->cd();
-
-      // Tuple to store the filter data
-      sumTuple = new TNtuple("ntuple_sim", "", VarList);
 
       float *vars = new Float_t[7];
       float mcPid, pid, evnt;
@@ -152,4 +158,6 @@ int main(int argc, char* argv[]) {
   sumTuple->Write();
   gROOT->cd();
   fileOutput->Close();
+  t.Print();
+
 }
