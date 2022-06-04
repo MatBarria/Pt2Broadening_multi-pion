@@ -15,6 +15,7 @@ const float Zh_MIN = 0.0;
 const float Zh_MAX = 1.0;
 const float Pt2_MIN = 0.0;
 const float Pt2_MAX = 3.0;
+const int ZH_SUM = 1;
 
 
 // Binning

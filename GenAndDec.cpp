@@ -23,8 +23,8 @@ int main(int argc, char* argv[]) {
 
   // Select the solid target
 
-  //TFile *fileOutput= new TFile(Form("/eos/user/m/mbarrial/Data/Acc/Gen_Dec_%s.root", targetArr), "RECREATE");
-  TFile *fileOutput= new TFile("Acce.root","RECREATE");
+  TFile *fileOutput= new TFile(Form("/eos/user/m/mbarrial/Data/Acc/Gen_Dec_%s.root", targetArr), "RECREATE");
+  //TFile *fileOutput= new TFile("Acce.root","RECREATE");
   gROOT->cd();
 
   // Create all the necessary histograms

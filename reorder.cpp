@@ -47,9 +47,7 @@ int main(int argc, char* argv[]) {
 
   // Open the input and output files
   TFile* fileData   = new TFile(fileDataName,"READ");
-  TFile* fileGenDec = new TFile(Form("/home/matias/proyecto/Piones/Data/VecSum/Acc/Gen_Dec_%s.root", simulTarget), "READ");
-  //TFile *fileOutput = new TFile(Form("/eos/user/m/mbarrial/Data/Acc/corr_data_Phi_%s.root", targetArr), "RECREATE");
-  TFile *fileOutput= new TFile(Form("/home/matias/proyecto/Piones/Data/VecSum/Acc/corr_data_Phi_%s.root", targetArr), "RECREATE");
+  TFile *fileOutput= new TFile(Form("/home/matias/proyecto/Piones/Data/VecSum/test/corr_data_Phi_%s.root", targetArr), "RECREATE");
   gROOT->cd();
 
   // Create some variables to use inside the for loops
@@ -57,14 +55,7 @@ int main(int argc, char* argv[]) {
   TCut Q2Cut, NuCut, ZhCut, Pt2Cut, YCCut, VCData, cutsData;
 
   // Create all the necessary histograms
-  TH1F *histDetected    = new TH1F("histDetected",    "", N_Phi, -180, 180);
-  TH1F *histTotDetected = new TH1F("histTotDetected", "", N_Phi, -180, 180);
-  TH1F *histThrown      = new TH1F("histThrown",      "", N_Phi, -180, 180);
   TH1F *histData        = new TH1F("Data",            "", N_Phi, -180, 180);
-  TH1F* histFalPos      = new TH1F("FalPosFactor",    "", N_Phi, -180, 180);
-  TH1F* histAccFactors  = new TH1F("AcceFactor",      "", N_Phi, -180, 180);
-  TH1F* histDataCorr    = new TH1F("DataCorr",        "", N_Phi, -180, 180);
-  TH1F* histDataCorr2   = new TH1F("DataCorr2",       "", N_Phi, -180, 180);
 
   // Store the sum of the weights A.K.A the erros (in the other histograms if save it by other methods)
   histData->Sumw2();
@@ -112,44 +103,19 @@ int main(int argc, char* argv[]) {
             Pt2Cut  = Form("Pt2>%f&&Pt2<%f", Pt2_BINS[Pt2Counter], Pt2_BINS[Pt2Counter+1]);
             ntupleData->Project("Data","PhiPQ", Pt2Cut);
             if(EmptyHist(histData) == 1){continue;}
-            // Generate histograms of the all dectected pion, all generated pion, and the pions that was correct dectected
-            histDetected    = (TH1F*) fileGenDec->Get(Form("histDetected_%s_%i%i%i%i_%i",    simulTarget, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histThrown      = (TH1F*) fileGenDec->Get(Form("histThrown_%s_%i%i%i%i_%i",      simulTarget, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histTotDetected = (TH1F*) fileGenDec->Get(Form("histTotDetected_%s_%i%i%i%i_%i", simulTarget, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-
-            // Calculate the Acceptance factor
-            histAccFactors->Divide(histDetected, histThrown, 1, 1, "B");
-            // Calculate a factor that reprensent how many of the detected as N pion events are truly N pions events
-            histFalPos->Divide(histDetected, histTotDetected, 1, 1, "B");
-            // Create the data histogram depending on of the cuts
-            //ntuple_data->Project("Data","PhiPQ", cuts_data);
-            AccHist1(histAccFactors);
-            AccHist1(histFalPos);
-            // Apply the correction factors
-            histDataCorr->Divide(histData, histAccFactors, 1, 1);
-            histDataCorr2->Multiply(histDataCorr, histFalPos, 1, 1);
 
 
             // Save the histograms in the output file
             fileOutput->cd();
 
-            //histData->Write(Form("Data_%s_%i%i%i%i_%i",             targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histDataCorr2->Write(Form("DataCorr2_%s_%i%i%i%i_%i",   targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            histDataCorr->Write(Form("DataCorr_%s_%i%i%i%i_%i",     targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            //histFalPos->Write(Form("FalPosFactor_%s_%i%i%i%i_%i",   targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
-            //histAccFactors->Write(Form("AcceFactor_%s_%i%i%i%i_%i", targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
+            histData->Write(Form("DataCorr2_%s_%i%i%i%i_%i",             targetArr, Q2Counter, NuCounter, ZhCounter, Pt2Counter, gen));
+
 
             gROOT->cd();
 
             // Set the histograms values to 0
             histData->Reset();
-            histDataCorr2->Reset();
-            histDataCorr->Reset();
-            histFalPos->Reset();
-            histAccFactors->Reset();
-            histThrown->Reset();
-            histDetected->Reset();
-            histTotDetected->Reset();
+
 
           }
           delete ntupleData;
@@ -161,7 +127,6 @@ int main(int argc, char* argv[]) {
   }
   fileOutput->Close();
   fileData->Close();
-  fileGenDec->Close();
   t.Print();
 
 }

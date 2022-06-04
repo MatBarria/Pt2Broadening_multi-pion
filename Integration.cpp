@@ -4,9 +4,9 @@ int main(){
 
   TStopwatch t;
 
-  TString inputDirectory  = "~/proyecto/Piones/Data/VecSum/Acc/";
-  TString outputDirectory = "~/proyecto/Piones/Data/VecSum/Acc/";
-  TString plotDirectory   = "~/proyecto/Piones/Plots/VecSum/Acc/";
+  TString inputDirectory  = "~/proyecto/Piones/Data/VecSum/test/";
+  TString outputDirectory = "~/proyecto/Piones/Data/VecSum/test/";
+  TString plotDirectory   = "~/proyecto/Piones/Plots/VecSum/test/";
 
   std::cout << "PhiPQ integration" << std::endl;
   CallPhiIntegration(   inputDirectory , outputDirectory);
