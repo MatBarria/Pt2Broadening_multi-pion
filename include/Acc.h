@@ -252,24 +252,24 @@ int EmptyHist(TH1F* h) {
 
 }
 
-// void rec_histo_process(TH1F* h) {
-//   /*Here is applied the condition that Naccept>1*/
-//   for(Int_t bin = 1; bin <= h->GetNbinsX(); bin++) {
-//     if(h->GetBinContent(bin) == 1) {
-//       h->SetBinContent(bin, 0);
-//       h->SetBinError(bin, 0);
-//     }
-//   }
-// }
+void AccCondition(TH1F* hist) {
+  /*Here is applied the condition that Naccept>1*/
+  for(Int_t bin = 1; bin <= hist->GetNbinsX(); bin++) {
+    if(hist->GetBinContent(bin) == 1) {
+      hist->SetBinContent(bin, 0);
+      hist->SetBinError(bin, 0);
+    }
+  }
+}
 
 // If Acceptance Factor > 1  set it to 0
-void AccHist1(TH1F* h) {
+void AccHist1(TH1F* hist) {
 
   /*Here is applied the condition that acc<1*/
-  for(Int_t bin = 1; bin <= h->GetNbinsX(); bin++) {
-    if(h->GetBinContent(bin) > 1) {
-      h->SetBinContent(bin, 0);
-      h->SetBinError(bin, 0);
+  for(Int_t bin = 1; bin <= hist->GetNbinsX(); bin++) {
+    if(hist->GetBinContent(bin) > 1) {
+      hist->SetBinContent(bin, 0);
+      hist->SetBinError(bin, 0);
     }
   }
 

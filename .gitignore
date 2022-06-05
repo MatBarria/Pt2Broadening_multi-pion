@@ -1,3 +1,4 @@
 bin/
-jobs/
+Data/
+Plots/
 .gitignore

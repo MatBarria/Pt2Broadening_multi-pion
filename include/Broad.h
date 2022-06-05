@@ -294,21 +294,21 @@ void CallQ2NuZhIntegration(TString inputDirectory, TString outputDirectory) {
 
 }
 
-void SetErrorXNull(TGraphErrors* g) {
+void SetErrorXNull(TGraphErrors* g, int Ntarget) {
 
   double* errors_Y = g->GetEY();
-  for(int point = 0 ; point < N_Nu ; point++) {
+  for(int point = 0 ; point < Ntarget ; point++) {
     g->SetPointError(point,0,errors_Y[point]);
   }
 
 }
 
-void SetXShift(TGraphErrors* g, double shift) {
+void SetXShift(TGraphErrors* g, double shift, int Ntarget) {
 
   double* content_Y = g->GetY();
   double* content_X = g->GetX();
 
-  for(int point = 0; point < N_Nu ; point++) {
+  for(int point = 0; point < Ntarget ; point++) {
     g->SetPoint(point, content_X[point] + shift , content_Y[point]);
   }
 
@@ -390,7 +390,7 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
 
     for(int i = 0 ; i < N_STARGETS ; i++){
       g[i][nPion-1] = (TGraphErrors*) TH1TOTGraph(histBroadening[i]);
-      SetErrorXNull(g[i][nPion-1]);
+      SetErrorXNull(g[i][nPion-1], N_Nu);
     }
 
     g[0][nPion-1]->SetMarkerColor(kRed);
@@ -400,8 +400,8 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    SetXShift(g[0][nPion-1],-0.035);
-    SetXShift(g[2][nPion-1],0.035);
+    SetXShift(g[0][nPion-1], -0.035, N_Nu);
+    SetXShift(g[2][nPion-1], 0.035,  N_Nu);
 
     for(int i = 0; i < 3; i++) {
       delete histSolid[i];
@@ -493,7 +493,7 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
 
     for(int i = 0 ; i < N_STARGETS ; i++){
       g[i][nPion-1] = (TGraphErrors*) TH1TOTGraph(histBroadening[i]);
-      SetErrorXNull(g[i][nPion-1]);
+      SetErrorXNull(g[i][nPion-1], N_Q2);
     }
 
     g[0][nPion-1]->SetMarkerColor(kRed);
@@ -503,8 +503,8 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    SetXShift(g[0][nPion-1],-0.035);
-    SetXShift(g[2][nPion-1],0.035);
+    SetXShift(g[0][nPion-1], -0.035, N_Q2);
+    SetXShift(g[2][nPion-1], 0.035,  N_Q2);
 
     for(int i = 0; i < N_STARGETS; i++){
       delete histSolid[i];
@@ -547,7 +547,7 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleSize(0.04,"XY");
 
   //mg->GetYaxis()->SetRangeUser(0.,0.059);
-  mg->GetYaxis()->SetRangeUser(0.,0.03);
+  mg->GetYaxis()->SetRangeUser(0.,0.12);
   mg->GetXaxis()->SetRangeUser(.9,4.1);
   mg->GetXaxis()->SetTitle("Q^{2}[GeV^{2}]");
   mg->GetXaxis()->CenterTitle();
@@ -597,7 +597,7 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
 
     for(int i = 0 ; i < N_STARGETS ; i++){
       g[i][nPion-1] = (TGraphErrors*) TH1TOTGraph(histBroadening[i]);
-      SetErrorXNull(g[i][nPion-1]);
+      SetErrorXNull(g[i][nPion-1], N_Zh);
     }
 
     g[0][nPion-1]->SetMarkerColor(kRed);
@@ -607,8 +607,8 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    SetXShift(g[0][nPion-1], -0.015);
-    SetXShift(g[2][nPion-1], 0.015);
+    SetXShift(g[0][nPion-1], -0.015, N_Zh);
+    SetXShift(g[2][nPion-1], 0.015,  N_Zh);
 
     for(int i = 0; i < N_STARGETS; i++){
       delete histSolid[i];
@@ -651,9 +651,7 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
   gStyle->SetTitleFont(62, "XY");
   gStyle->SetTitleSize(0.04, "XY");
 
-  mg->GetYaxis()->SetRangeUser(0.,0.03);
-//mg->GetYaxis()->SetRangeUser(0.,0.45);;
-  //mg->GetXaxis()->SetRangeUser(0.,0.75);
+  mg->GetYaxis()->SetRangeUser(0.,0.19);
   mg->GetXaxis()->SetRangeUser(Zh_MIN, Zh_MAX);
   mg->GetXaxis()->SetTitle("Zh_{sum}");
   mg->GetXaxis()->CenterTitle();
@@ -716,9 +714,9 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    SetErrorXNull(g[0][nPion-1]);
-    SetErrorXNull(g[1][nPion-1]);
-    SetErrorXNull(g[2][nPion-1]);
+    SetErrorXNull(g[0][nPion-1], N_STARGETS);
+    SetErrorXNull(g[1][nPion-1], N_STARGETS);
+    SetErrorXNull(g[2][nPion-1], N_STARGETS);
 
     for(int i = 0; i < N_STARGETS; i++) {
       delete histSolid[i];
@@ -735,8 +733,8 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
     g[k][1]->SetMarkerSize(.6);
     g[k][2]->SetMarkerStyle(27);
     g[k][2]->SetMarkerSize(1.2);
-    SetXShift(g[k][0],-0.035);
-    SetXShift(g[k][2],0.035);
+    SetXShift(g[k][0], -0.035, N_STARGETS);
+    SetXShift(g[k][2], 0.035,  N_STARGETS);
   }
 
   TCanvas* c = new TCanvas("c", "", 800, 600);
@@ -767,9 +765,7 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleFont(62,"XY");
   gStyle->SetTitleSize(0.04,"XY");
 
-  mg->GetYaxis()->SetRangeUser(0.,0.12);
-  //mg->GetYaxis()->SetRangeUser(0.012,0.08);
-  //mg->GetYaxis()->SetRangeUser(0.,0.2);
+  mg->GetYaxis()->SetRangeUser(0.,0.1);
   mg->GetXaxis()->SetRangeUser(2, 6);
   mg->GetXaxis()->SetTitle("A^{1/3}");
   mg->GetXaxis()->CenterTitle();

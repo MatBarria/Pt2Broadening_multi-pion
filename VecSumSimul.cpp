@@ -106,14 +106,14 @@ int main(int argc, char* argv[]) {
         simulTuple->GetEntry(i + 1);
         // Check if the next particle cames from the same event
         while(tmpEvnt == evnt) {
-          if(mcPid == 211 ) {
+          if(mcPid == 211 ) { // if the generated paricle is a pi+
             // save the angle PhiPQ,Zh and Pt of every pion in the event
             tmpZh[(int)vars[0]]  = vars[4];
             tmpPt[(int)vars[0]]  = TMath::Sqrt(vars[5]);
             tmpPhi[(int)vars[0]] = vars[6];
             vars[0]++;
           }
-          if(pid == 211 ) { vars[1]++; }
+          if(pid == 211 ) { vars[1]++; } // if the detected paricle is a pi+
           tmpCounter++;
           tmpEvnt = evnt;
           // Go to the next particle

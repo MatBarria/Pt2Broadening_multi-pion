@@ -4,9 +4,9 @@ int main(){
 
   TStopwatch t;
 
-  TString inputDirectory  = "~/proyecto/Piones/Data/VecSum/test/";
-  TString outputDirectory = "~/proyecto/Piones/Data/VecSum/test/";
-  TString plotDirectory   = "~/proyecto/Piones/Plots/VecSum/test/";
+  TString inputDirectory  = "/home/matias/proyecto/Pt2Broadening_multi-pion/Data/";
+  TString outputDirectory = "/home/matias/proyecto/Pt2Broadening_multi-pion/Data/";
+  TString plotDirectory   = "/home/matias/proyecto/Pt2Broadening_multi-pion/Plots/";
 
   PtBroadeningQ2Integrated(  inputDirectory, plotDirectory);
   PtBroadeningNuIntegrated(  inputDirectory, plotDirectory);
