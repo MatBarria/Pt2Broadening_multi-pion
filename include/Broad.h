@@ -46,7 +46,7 @@ void PhiIntegration(TFile* inputFile, TFile* outputFile, char target[]) {
             // Integrate on PhiPQ
 	          // double errors_array[1] = {};
             double error;
-	          double integral = histPhi->IntegralAndError(1,N_Phi,error);
+	          double integral = histPhi->IntegralAndError(1, N_Phi, error);
 	          // Save the value in the Pt2 histogram
 	          histPt2->SetBinContent(Pt2Counter + 1, integral);
 	          // histPt2->SetBinError(Pt2Counter + 1, errors_array[0]);
@@ -314,6 +314,35 @@ void SetXShift(TGraphErrors* g, double shift, int Ntarget) {
 
 }
 
+TLegend* GenTLegendTarget(TGraphErrors* g[N_STARGETS][N_PION+1], float pos = 0.17) {
+  TLegend* legend = new TLegend(pos, 0.75, pos + 0.13, 0.92, "", "NDC");
+  legend->AddEntry(g[0][0],"C","lpf");
+  legend->AddEntry(g[1][0],"Fe","lpf");
+  legend->AddEntry(g[2][0],"Pb","lpf");
+  legend->SetFillStyle(0);
+  legend->SetBorderSize(0);
+  legend->SetTextFont(62);
+  legend->SetTextSize(0.04);
+  return legend;
+
+}
+
+TLegend* GenTLegendNPion(TGraphErrors* g[N_STARGETS][N_PION+1], float pos = 0.28) {
+
+  TLegend* legend = new TLegend(pos, 0.75, pos + 0.07, 0.92, "", "NDC");
+  //legend->AddEntry((TObject*)0, "Final state", "");
+  legend->AddEntry(g[2][0],"1 #pi +","lpf");
+  legend->AddEntry(g[2][1],"2 #pi +","lpf");
+  legend->AddEntry(g[2][2],"3 #pi +","lpf");
+  legend->AddEntry(g[2][3],"All Data","lpf");
+  legend->SetFillStyle(0);
+  legend->SetBorderSize(0);
+  legend->SetTextFont(62);
+  legend->SetTextSize(0.04);
+  return legend;
+
+}
+
 TLegend* GenTLegendTarget(TGraphErrors* g[N_STARGETS][N_PION]) {
 
   TLegend* legend = new TLegend(0.22,0.75,0.3,0.92,"","NDC");
@@ -364,8 +393,9 @@ TGraphErrors* TH1TOTGraph(TH1 *h1){
 void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
 
   TFile* inputFile = new TFile(inputDirectory + Form("meanPt2_Nu_%i.root", N_Nu), "READ");
+  TFile* inputFileEst = new TFile(inputDirectory + Form("meanPt2_Nu_%i-Esteban.root", N_Nu), "READ");
 
-  TGraphErrors* g[N_STARGETS][N_PION];
+  TGraphErrors* g[N_STARGETS][N_PION+1];
   TCanvas* c = new TCanvas("c", "", 800, 600);
   c->Draw();
   for(int nPion = 1; nPion <= N_PION; nPion++) { // Loops in every number of pion
@@ -400,8 +430,8 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    SetXShift(g[0][nPion-1], -0.035, N_Nu);
-    SetXShift(g[2][nPion-1], 0.035,  N_Nu);
+    // SetXShift(g[0][nPion-1], -0.035, N_Nu);
+    // SetXShift(g[2][nPion-1], 0.035,  N_Nu);
 
     for(int i = 0; i < 3; i++) {
       delete histSolid[i];
@@ -412,20 +442,68 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
 
   inputFile->Close();
 
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
+  TH1F* histSolid[N_STARGETS]; TH1F* histLiquid[N_STARGETS]; TH1F* histBroadening[N_STARGETS];
+
+  histSolid[0]  = (TH1F*) inputFileEst->Get("meanPt2_C_Nu_CLEAN_INTERPOLATED");
+  histSolid[1]  = (TH1F*) inputFileEst->Get("meanPt2_Fe_Nu_CLEAN_INTERPOLATED");
+  histSolid[2]  = (TH1F*) inputFileEst->Get("meanPt2_Pb_Nu_CLEAN_INTERPOLATED");
+
+  histLiquid[0] = (TH1F*) inputFileEst->Get("meanPt2_DC_Nu_CLEAN_INTERPOLATED");
+  histLiquid[1] = (TH1F*) inputFileEst->Get("meanPt2_DFe_Nu_CLEAN_INTERPOLATED");
+  histLiquid[2] = (TH1F*) inputFileEst->Get("meanPt2_DPb_Nu_CLEAN_INTERPOLATED");
+
+  for(int i = 0 ; i < 3 ; i++) {
+    //Calculate the Broadening (subtract of the means)
+    histBroadening[i] = new TH1F(Form("histBroadening_%i", i), "", N_Nu, Nu_BINS);
+    histBroadening[i]->Add(histSolid[i], histLiquid[i], 1, -1);
+  }
+
+  for(int i = 0 ; i < N_STARGETS ; i++){
+    g[i][N_PION] = (TGraphErrors*) TH1TOTGraph(histBroadening[i]);
+    SetErrorXNull(g[i][N_PION], N_Nu);
+  }
+  //Set a color for each target
+  g[0][N_PION]->SetMarkerColor(kRed);
+  g[0][N_PION]->SetLineColor(kRed);
+  g[1][N_PION]->SetMarkerColor(kBlue);
+  g[1][N_PION]->SetLineColor(kBlue);
+  g[2][N_PION]->SetMarkerColor(kBlack);
+
+  SetXShift(g[0][0], -0.075 - 0.030, N_Nu);
+  SetXShift(g[1][0], - 0.030, N_Nu);
+  SetXShift(g[2][0], 0.075 +  0.040, N_Nu);
+
+  SetXShift(g[0][1], -0.075 , N_Nu);
+  SetXShift(g[2][1], 0.075 , N_Nu);
+
+  SetXShift(g[0][2], -0.075  - 0.050, N_Nu);
+  SetXShift(g[1][2], -0.030, N_Nu);
+  SetXShift(g[2][2], 0.075 ,  N_Nu);
+
+
+  SetXShift(g[0][N_PION], -0.075, N_Nu);
+  SetXShift(g[2][N_PION], 0.055,  N_Nu);
+
+  inputFileEst->Close();
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
   for(int k = 0; k < N_PION; k++) {
-    g[k][0]->SetMarkerStyle(1);
+    g[k][0]->SetMarkerStyle(4);
+    g[k][0]->SetMarkerSize(.53);
     g[k][1]->SetMarkerStyle(8);
     g[k][1]->SetMarkerSize(.6);
     g[k][2]->SetMarkerStyle(27);
     g[k][2]->SetMarkerSize(1.4);
+    g[k][3]->SetMarkerStyle(22);
+    g[k][3]->SetMarkerSize(1.);
   }
 
-  TLegend* legendTarget = GenTLegendTarget(g);
-  TLegend* legendNPion= GenTLegendNPion(g);
 
   TPad* p = new TPad("p","p",0,0,1,1);
   p->SetLeftMargin(0.13);
-  p->SetTopMargin(0.06);
+  p->SetTopMargin(0.055);
   p->SetGridx(1);
   p->SetGridy(1);
   p->Draw();
@@ -433,7 +511,7 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
 
   TMultiGraph* mg = new TMultiGraph();
   for(int i = 0; i < N_STARGETS; i++) {
-    for(int j = 0; j < N_PION; j++) {
+    for(int j = 0; j < N_PION+1; j++) {
         mg->Add(g[i][j]);
     }
   }
@@ -443,7 +521,7 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleSize(0.04,"XY");
 
   // mg->GetYaxis()->SetRangeUser(0.,0.059);
-  mg->GetYaxis()->SetRangeUser(0.,0.11);
+  mg->GetYaxis()->SetRangeUser(0.,0.049);
   mg->GetXaxis()->SetRangeUser(2.1,4.3);
   mg->GetXaxis()->SetTitle("#nu[GeV]");
   mg->GetXaxis()->CenterTitle();
@@ -454,6 +532,10 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
   mg->GetYaxis()->SetTitleOffset(1.3);
 
   mg->Draw("APE0");
+
+  TLegend* legendTarget = GenTLegendTarget(g);
+  TLegend* legendNPion= GenTLegendNPion(g);
+
   legendTarget->Draw();
   legendNPion->Draw();
 
@@ -465,11 +547,12 @@ void PtBroadeningNuIntegrated(TString inputDirectory, TString plotDirectory) {
 void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
 
   TFile* inputFile = new TFile(inputDirectory + Form("meanPt2_Q2_%i.root", N_Q2), "READ");
+  TFile* inputFileEst = new TFile(inputDirectory + Form("meanPt2_Q2_%i-Esteban.root", N_Q2), "READ");
 
   TCanvas* c = new TCanvas("c", "", 800, 600);
   c->Draw();
 
-  TGraphErrors* g[N_STARGETS][N_PION];
+  TGraphErrors* g[N_STARGETS][N_PION+1];
 
   for(int nPion = 1; nPion <= N_PION; nPion++) { // Loops in every number of pion
     TH1F* histSolid[N_STARGETS];   TH1F* histLiquid[N_STARGETS]; TH1F* histBroadening[N_STARGETS];
@@ -503,8 +586,8 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
     g[2][nPion-1]->SetMarkerColor(kBlack);
     g[2][nPion-1]->SetLineColor(kBlack);
 
-    SetXShift(g[0][nPion-1], -0.035, N_Q2);
-    SetXShift(g[2][nPion-1], 0.035,  N_Q2);
+    // SetXShift(g[0][nPion-1], -0.03 - 0.020*nPion, N_Q2);
+    // SetXShift(g[2][nPion-1], 0.03 + 0.020*nPion,  N_Q2);
 
     for(int i = 0; i < N_STARGETS; i++){
       delete histSolid[i];
@@ -515,8 +598,55 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
 
   inputFile->Close();
 
-  TLegend* legendTarget = GenTLegendTarget(g);
-  TLegend* legendNPion = GenTLegendNPion(g);
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
+  TH1F* histSolid[N_STARGETS]; TH1F* histLiquid[N_STARGETS]; TH1F* histBroadening[N_STARGETS];
+
+  histSolid[0]  = (TH1F*) inputFileEst->Get("meanPt2_C_Q2_CLEAN_INTERPOLATED");
+  histSolid[1]  = (TH1F*) inputFileEst->Get("meanPt2_Fe_Q2_CLEAN_INTERPOLATED");
+  histSolid[2]  = (TH1F*) inputFileEst->Get("meanPt2_Pb_Q2_CLEAN_INTERPOLATED");
+
+  histLiquid[0] = (TH1F*) inputFileEst->Get("meanPt2_DC_Q2_CLEAN_INTERPOLATED");
+  histLiquid[1] = (TH1F*) inputFileEst->Get("meanPt2_DFe_Q2_CLEAN_INTERPOLATED");
+  histLiquid[2] = (TH1F*) inputFileEst->Get("meanPt2_DPb_Q2_CLEAN_INTERPOLATED");
+
+  for(int i = 0 ; i < 3 ; i++) {
+    //Calculate the Broadening (subtract of the means)
+    histBroadening[i] = new TH1F(Form("histBroadening_%i", i), "", N_Q2, Q2_BINS);
+    histBroadening[i]->Add(histSolid[i], histLiquid[i], 1, -1);
+  }
+
+  for(int i = 0 ; i < N_STARGETS ; i++){
+    g[i][N_PION] = (TGraphErrors*) TH1TOTGraph(histBroadening[i]);
+    SetErrorXNull(g[i][N_PION], N_Q2);
+  }
+
+  //Set a color for each target
+  g[0][N_PION]->SetMarkerColor(kRed);
+  g[0][N_PION]->SetLineColor(kRed);
+  g[1][N_PION]->SetMarkerColor(kBlue);
+  g[1][N_PION]->SetLineColor(kBlue);
+  g[2][N_PION]->SetMarkerColor(kBlack);
+
+  SetXShift(g[0][0], -0.075 - 0.030, N_Q2);
+  SetXShift(g[1][0], - 0.030, N_Q2);
+  SetXShift(g[2][0], 0.075 +  0.030, N_Q2);
+
+  SetXShift(g[0][1], -0.075 , N_Q2);
+  SetXShift(g[2][1], 0.075 , N_Q2);
+
+  SetXShift(g[0][2], -0.075  - 0.050, N_Q2);
+  SetXShift(g[1][2], -0.030, N_Q2);
+  SetXShift(g[2][2], 0.075 ,  N_Q2);
+
+
+  SetXShift(g[0][N_PION], -0.055, N_Q2);
+  //SetXShift(g[1][N_PION], 0.095,  N_Q2);
+  SetXShift(g[2][N_PION], 0.055,  N_Q2);
+
+  inputFileEst->Close();
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
 
   TPad* p = new TPad("p","p",0,0,1,1);
   p->SetGridx(1);
@@ -527,16 +657,19 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
   p->cd();
 
   for(int k = 0; k < N_STARGETS; k++) {
-    g[k][0]->SetMarkerStyle(1);
+    g[k][0]->SetMarkerStyle(4);
+    g[k][0]->SetMarkerSize(.53);
     g[k][1]->SetMarkerStyle(8);
     g[k][1]->SetMarkerSize(.6);
     g[k][2]->SetMarkerStyle(27);
     g[k][2]->SetMarkerSize(1.2);
+    g[k][3]->SetMarkerStyle(22);
+    g[k][3]->SetMarkerSize(1.);
   }
 
   TMultiGraph* mg = new TMultiGraph();
   for(int i = 0; i < N_STARGETS; i++){
-    for(int j = 0; j < N_PION; j++){
+    for(int j = 0; j < N_PION + 1; j++){
         mg->Add(g[i][j]);
     }
   }
@@ -547,7 +680,7 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleSize(0.04,"XY");
 
   //mg->GetYaxis()->SetRangeUser(0.,0.059);
-  mg->GetYaxis()->SetRangeUser(0.,0.12);
+  mg->GetYaxis()->SetRangeUser(0.,0.048);
   mg->GetXaxis()->SetRangeUser(.9,4.1);
   mg->GetXaxis()->SetTitle("Q^{2}[GeV^{2}]");
   mg->GetXaxis()->CenterTitle();
@@ -558,6 +691,8 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
   mg->GetYaxis()->SetTitleOffset(1.3);
 
   mg->Draw("APE0");
+  TLegend* legendTarget = GenTLegendTarget(g);
+  TLegend* legendNPion = GenTLegendNPion(g, 0.42);
   legendTarget->Draw();
   legendNPion->Draw();
 
@@ -569,10 +704,11 @@ void PtBroadeningQ2Integrated(TString inputDirectory, TString plotDirectory) {
 void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
 
   TFile* inputFile = new TFile(inputDirectory + Form("meanPt2_Zh_%i.root", N_Zh), "READ");
+  TFile* inputFileEst = new TFile(inputDirectory + Form("meanPt2_Zh_%i-Esteban.root", 8), "READ");
 
   TCanvas* c = new TCanvas("c", "", 800, 600);
   c->Draw();
-  TGraphErrors* g[N_STARGETS][N_PION];
+  TGraphErrors* g[N_STARGETS][N_PION+1];
 
   for(int nPion = 1; nPion <= N_PION; nPion++) { // Loops in every number of pion
 
@@ -619,12 +755,54 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
 
   inputFile->Close();
 
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
+  TH1F* histSolid[N_STARGETS]; TH1F* histLiquid[N_STARGETS]; TH1F* histBroadening[N_STARGETS];
+
+  histSolid[0]  = (TH1F*) inputFileEst->Get("meanPt2_C_CLEAN_INTERPOLATED");
+  histSolid[1]  = (TH1F*) inputFileEst->Get("meanPt2_Fe_CLEAN_INTERPOLATED");
+  histSolid[2]  = (TH1F*) inputFileEst->Get("meanPt2_Pb_CLEAN_INTERPOLATED");
+
+  histLiquid[0] = (TH1F*) inputFileEst->Get("meanPt2_DC_CLEAN_INTERPOLATED");
+  histLiquid[1] = (TH1F*) inputFileEst->Get("meanPt2_DFe_CLEAN_INTERPOLATED");
+  histLiquid[2] = (TH1F*) inputFileEst->Get("meanPt2_DPb_CLEAN_INTERPOLATED");
+
+  for(int i = 0 ; i < 3 ; i++) {
+    //Calculate the Broadening (subtract of the means)
+    histBroadening[i] = new TH1F(Form("histBroadening_%i", i), "", 8, Zh_BINS_E);
+    histBroadening[i]->Add(histSolid[i], histLiquid[i], 1, -1);
+    }
+
+  for(int i = 0 ; i < N_STARGETS ; i++){
+    g[i][N_PION] = (TGraphErrors*) TH1TOTGraph(histBroadening[i]);
+    SetErrorXNull(g[i][N_PION], 8);
+  }
+        //Set a color for each target
+  g[0][N_PION]->SetMarkerColor(kRed);
+  g[0][N_PION]->SetLineColor(kRed);
+  g[1][N_PION]->SetMarkerColor(kBlue);
+  g[1][N_PION]->SetLineColor(kBlue);
+  g[2][N_PION]->SetMarkerColor(kBlack);
+  g[2][N_PION]->SetLineColor(kBlack);
+
+  SetErrorXNull(g[0][N_PION], N_STARGETS);
+  SetErrorXNull(g[1][N_PION], N_STARGETS);
+  SetErrorXNull(g[2][N_PION], N_STARGETS);
+
+
+  inputFileEst->Close();
+
+    // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
   for(int k = 0; k < 3; k++) {
-    g[k][0]->SetMarkerStyle(1);
+    g[k][0]->SetMarkerStyle(4);
+    g[k][0]->SetMarkerSize(.53);
     g[k][1]->SetMarkerStyle(8);
     g[k][1]->SetMarkerSize(0.95);
     g[k][2]->SetMarkerStyle(27);
     g[k][2]->SetMarkerSize(1.7);
+    g[k][3]->SetMarkerStyle(22);
+    g[k][3]->SetMarkerSize(1.2);
   }
 
 
@@ -641,7 +819,7 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
 
   TMultiGraph* mg = new TMultiGraph();
   for(int i = 0; i < N_STARGETS; i++) {
-    for(int j = 0; j < N_PION; j++) {
+    for(int j = 0; j < N_PION + 1 ; j++) {
         mg->Add(g[i][j]);
     }
   }
@@ -651,7 +829,7 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
   gStyle->SetTitleFont(62, "XY");
   gStyle->SetTitleSize(0.04, "XY");
 
-  mg->GetYaxis()->SetRangeUser(0.,0.19);
+  mg->GetYaxis()->SetRangeUser(0.,0.072);
   mg->GetXaxis()->SetRangeUser(Zh_MIN, Zh_MAX);
   mg->GetXaxis()->SetTitle("Zh_{sum}");
   mg->GetXaxis()->CenterTitle();
@@ -672,39 +850,40 @@ void PtBroadeningZhIntegrated(TString inputDirectory,  TString plotDirectory) {
 void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
 
   TFile* inputFile = new TFile(inputDirectory + "meanPt2.root", "READ");
+  TFile* inputFileEst = new TFile(inputDirectory + "meanPt2-Esteban.root", "READ");
 
-  TGraphErrors* g[N_STARGETS][N_PION];
+  TGraphErrors* g[N_STARGETS][N_PION + 1 ];
 
   for(int nPion = 1; nPion <= N_PION; nPion++) {
 
     TH1F* histSolid[N_STARGETS]; TH1F* histLiquid[N_STARGETS]; TH1F* histBroadening[N_STARGETS];
 
-    histSolid[0] = (TH1F*) inputFile->Get(Form("meanPt2_C_%i_CLEAN_INTERPOLATED",nPion));
-    histSolid[1] = (TH1F*) inputFile->Get(Form("meanPt2_Fe_%i_CLEAN_INTERPOLATED",nPion));
-    histSolid[2] = (TH1F*) inputFile->Get(Form("meanPt2_Pb_%i_CLEAN_INTERPOLATED",nPion));
+    histSolid[0]  = (TH1F*) inputFile->Get(Form("meanPt2_C_%i_CLEAN_INTERPOLATED",   nPion));
+    histSolid[1]  = (TH1F*) inputFile->Get(Form("meanPt2_Fe_%i_CLEAN_INTERPOLATED",  nPion));
+    histSolid[2]  = (TH1F*) inputFile->Get(Form("meanPt2_Pb_%i_CLEAN_INTERPOLATED",  nPion));
 
-    histLiquid[0] = (TH1F*) inputFile->Get(Form("meanPt2_DC_%i_CLEAN_INTERPOLATED",nPion));
-    histLiquid[1] = (TH1F*) inputFile->Get(Form("meanPt2_DFe_%i_CLEAN_INTERPOLATED",nPion));
-    histLiquid[2] = (TH1F*) inputFile->Get(Form("meanPt2_DPb_%i_CLEAN_INTERPOLATED",nPion));
+    histLiquid[0] = (TH1F*) inputFile->Get(Form("meanPt2_DC_%i_CLEAN_INTERPOLATED",  nPion));
+    histLiquid[1] = (TH1F*) inputFile->Get(Form("meanPt2_DFe_%i_CLEAN_INTERPOLATED", nPion));
+    histLiquid[2] = (TH1F*) inputFile->Get(Form("meanPt2_DPb_%i_CLEAN_INTERPOLATED", nPion));
 
-    for(int i = 0 ; i < 3 ; i++) {
+    for(int i = 0 ; i < N_PION ; i++) {
       //Calculate the Broadening (subtract of the means)
-      histBroadening[i] = new TH1F(Form("histBroadening_%i",i),"",1,Zh_MIN,Zh_MAX);
-      histBroadening[i]->Add(histSolid[i],histLiquid[i],1,-1);
+      histBroadening[i] = new TH1F(Form("histBroadening_%i", i), "", 1, Zh_MIN, Zh_MAX);
+      histBroadening[i]->Add(histSolid[i], histLiquid[i], 1, -1);
     }
 
     // Set the points in TGraphErrors
     g[0][nPion-1] = new TGraphErrors();
-    g[0][nPion-1]->SetPoint(1,TMath::Power(12.01,1./3.),histBroadening[0]->GetBinContent(1));
-    g[0][nPion-1]->SetPointError(1,0,histBroadening[0]->GetBinError(1));
+    g[0][nPion-1]->SetPoint(1, TMath::Power(12.01,1./3.), histBroadening[0]->GetBinContent(1));
+    g[0][nPion-1]->SetPointError(1, 0, histBroadening[0]->GetBinError(1));
 
     g[1][nPion-1] = new TGraphErrors();
-    g[1][nPion-1]->SetPoint(1,TMath::Power(55.845,1./3.),histBroadening[1]->GetBinContent(1));
-    g[1][nPion-1]->SetPointError(1,0,histBroadening[1]->GetBinError(1));
+    g[1][nPion-1]->SetPoint(1, TMath::Power(55.845,1./3.), histBroadening[1]->GetBinContent(1));
+    g[1][nPion-1]->SetPointError(1, 0,histBroadening[1]->GetBinError(1));
 
     g[2][nPion-1] = new TGraphErrors();
-    g[2][nPion-1]->SetPoint(1,TMath::Power(207.2,1./3.),histBroadening[2]->GetBinContent(1));
-    g[2][nPion-1]->SetPointError(1,0,histBroadening[2]->GetBinError(1));
+    g[2][nPion-1]->SetPoint(1, TMath::Power(207.2,1./3.), histBroadening[2]->GetBinContent(1));
+    g[2][nPion-1]->SetPointError(1, 0, histBroadening[2]->GetBinError(1));
 
     //Set a color for each target
     g[0][nPion-1]->SetMarkerColor(kRed);
@@ -724,17 +903,66 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
       delete histBroadening[i];
     }
   } // End number pion event loop
-
   inputFile->Close();
 
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
+  TH1F* histSolid[N_STARGETS]; TH1F* histLiquid[N_STARGETS]; TH1F* histBroadening[N_STARGETS];
+
+  histSolid[0]  = (TH1F*) inputFileEst->Get("meanPt2_C_CLEAN_INTERPOLATED");
+  histSolid[1]  = (TH1F*) inputFileEst->Get("meanPt2_Fe_CLEAN_INTERPOLATED");
+  histSolid[2]  = (TH1F*) inputFileEst->Get("meanPt2_Pb_CLEAN_INTERPOLATED");
+
+  histLiquid[0] = (TH1F*) inputFileEst->Get("meanPt2_DC_CLEAN_INTERPOLATED");
+  histLiquid[1] = (TH1F*) inputFileEst->Get("meanPt2_DFe_CLEAN_INTERPOLATED");
+  histLiquid[2] = (TH1F*) inputFileEst->Get("meanPt2_DPb_CLEAN_INTERPOLATED");
+
+  for(int i = 0 ; i < 3 ; i++) {
+    //Calculate the Broadening (subtract of the means)
+    histBroadening[i] = new TH1F(Form("histBroadening_%i",i), "", 1, Zh_MIN ,Zh_MAX);
+    histBroadening[i]->Add(histSolid[i], histLiquid[i], 1, -1);
+  }
+
+  // Set the points in TGraphErrors
+  g[0][N_PION] = new TGraphErrors();
+  g[0][N_PION]->SetPoint(1,TMath::Power(12.01,1./3.),histBroadening[0]->GetBinContent(1));
+  g[0][N_PION]->SetPointError(1,0,histBroadening[0]->GetBinError(1));
+
+  g[1][N_PION] = new TGraphErrors();
+  g[1][N_PION]->SetPoint(1,TMath::Power(55.845,1./3.),histBroadening[1]->GetBinContent(1));
+  g[1][N_PION]->SetPointError(1,0,histBroadening[1]->GetBinError(1));
+
+  g[2][N_PION] = new TGraphErrors();
+  g[2][N_PION]->SetPoint(1,TMath::Power(207.2,1./3.),histBroadening[2]->GetBinContent(1));
+  g[2][N_PION]->SetPointError(1,0,histBroadening[2]->GetBinError(1));
+
+  //Set a color for each target
+  g[0][N_PION]->SetMarkerColor(kRed);
+  g[0][N_PION]->SetLineColor(kRed);
+  g[1][N_PION]->SetMarkerColor(kBlue);
+  g[1][N_PION]->SetLineColor(kBlue);
+  g[2][N_PION]->SetMarkerColor(kBlack);
+
+  SetErrorXNull(g[0][N_PION], N_STARGETS);
+  SetErrorXNull(g[1][N_PION], N_STARGETS);
+  SetErrorXNull(g[2][N_PION], N_STARGETS);
+
+
+  inputFileEst->Close();
+  // ***** Add the standar pt2 Broadening pt2 broadening (Esteban results)********/////
+
   for(int k = 0; k < N_STARGETS; k++) {
-    g[k][0]->SetMarkerStyle(1);
+    g[k][0]->SetMarkerStyle(4);
+    g[k][0]->SetMarkerSize(.53);
     g[k][1]->SetMarkerStyle(8);
     g[k][1]->SetMarkerSize(.6);
     g[k][2]->SetMarkerStyle(27);
     g[k][2]->SetMarkerSize(1.2);
-    SetXShift(g[k][0], -0.035, N_STARGETS);
-    SetXShift(g[k][2], 0.035,  N_STARGETS);
+    g[k][3]->SetMarkerStyle(22);
+    g[k][3]->SetMarkerSize(1.);
+    SetXShift(g[k][0], -0.055, N_STARGETS);
+    SetXShift(g[k][2], 0.055,  N_STARGETS);
+    SetXShift(g[k][N_PION], 0.055, N_STARGETS);
   }
 
   TCanvas* c = new TCanvas("c", "", 800, 600);
@@ -755,7 +983,7 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
   TMultiGraph* mg = new TMultiGraph();
 
   for(int i = 0; i < N_STARGETS; i++) {
-    for(int j = 0; j < N_PION; j++) {
+    for(int j = 0; j < N_PION + 1; j++) {
         mg->Add(g[i][j]);
     }
   }
@@ -765,8 +993,8 @@ void PtBroadeningFullIntegrated(TString inputDirectory, TString plotDirectory) {
   gStyle->SetTitleFont(62,"XY");
   gStyle->SetTitleSize(0.04,"XY");
 
-  mg->GetYaxis()->SetRangeUser(0.,0.1);
-  mg->GetXaxis()->SetRangeUser(2, 6);
+  mg->GetYaxis()->SetRangeUser(-0.004,0.042);
+  mg->GetXaxis()->SetRangeUser(2, 6.3);
   mg->GetXaxis()->SetTitle("A^{1/3}");
   mg->GetXaxis()->CenterTitle();
   mg->GetXaxis()->SetTitleOffset(1.1);

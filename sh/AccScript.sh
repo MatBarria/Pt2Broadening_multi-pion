@@ -19,6 +19,7 @@ cd ..
 cd Data
 
 hadd -f corr_data_Phi.root corr_data_Phi_C.root corr_data_Phi_Fe.root corr_data_Phi_Pb.root corr_data_Phi_DC.root corr_data_Phi_DFe.root corr_data_Phi_DPb.root
+rm corr_data_Phi_C.root corr_data_Phi_Fe.root corr_data_Phi_Pb.root corr_data_Phi_DC.root corr_data_Phi_DFe.root corr_data_Phi_DPb.root
 
 cd ..
 cd bin

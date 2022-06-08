@@ -1,3 +1,8 @@
+// This code integrate the histograms generate by AccCorrection.cpp
+// To obtain the means of Pt2
+// It can be compile with
+// g++ -Wall -fPIC -I./include `root-config --cflags` Integration.cpp -o ./bin/Integration  `root-config --glibs` ./include/Broad.h
+
 #include "Broad.h"
 
 int main(){
@@ -17,11 +22,6 @@ int main(){
   CallQ2ZhIntegration(  inputDirectory , outputDirectory);
   std::cout << "Q2, Nu and Zh integration" << std::endl;
   CallQ2NuZhIntegration(inputDirectory , outputDirectory);
-
-  // PtBroadeningQ2Integrated(  inputDirectory, plotDirectory);
-  // PtBroadeningNuIntegrated(  inputDirectory, plotDirectory);
-  // PtBroadeningZhIntegrated(  inputDirectory, plotDirectory);
-  // PtBroadeningFullIntegrated(inputDirectory, plotDirectory);
 
   t.Print();
 

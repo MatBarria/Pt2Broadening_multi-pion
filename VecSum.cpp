@@ -1,108 +1,124 @@
-void pionSeparator(string strMat) {
+// This code generate a tuple with all the events of experimental data
+// Saves the electron variables and calculate for the hadrons variables
+// calculate vectorial momentum and use it as the hadron momentum for the event
+// The code require that you have the number of the event saved in the data tupleName
+// if you don't have it you can check by for the paricle has the same Q2 and Nu instead
+// It can be compiled with
+// g++ -Wall -fPIC -I./include `root-config --cflags` VecSum.cpp -o ./bin/VecSum  `root-config --glibs`
+// For the target name use (C,Fe,Pb)
 
-  int n = strMat.length();
-  char material[n + 1];
-  strcpy(material, strMat.c_str());
+#include <iostream>
+#include <string>
+#include "Binning.h"
+#include "TMath.h"
+#include "TString.h"
+#include "TFile.h"
+#include "TNtuple.h"
+#include "TVector2.h"
+#include "TStopwatch.h"
+#include "TROOT.h"
 
-  TString inputName;
-  TString tupleName;
-  TString outputName;
+int main(int argc, char* argv[]) {
 
-  inputName = Form("/work/emolina/%s_data_Npion.root", material);
-  tupleName = "ntuple_data";
-  outputName = Form("/eos/user/m/mbarrial/Data/pSeparated_%s.root", material);
-  std::cout << "data " << std::endl;
+  if(argc != 2) {
+    std::cout << "Insert (just) the target name as a parameter" << std::endl;
+    return 0;
+  }
 
-  TFile* file = new TFile(inputName ,"READ");
-  TNtuple* tuple = (TNtuple*)file->Get(tupleName);
+  TStopwatch t;
+  std::cout << "Start" << std::endl;
 
-  const char* VarList = "Q2:Nu:PhiPQ:Zh:Pt2:Xf:Xb:YC:PID:Mass2:VC_TM";
-  Float_t *vars         = new Float_t[12];
-  tuple->SetBranchAddress("Q2",&vars[0]);
-  tuple->SetBranchAddress("Nu",&vars[1]);
-  tuple->SetBranchAddress("PhiPQ",&vars[2]);
-  tuple->SetBranchAddress("Zh",&vars[3]);
-  tuple->SetBranchAddress("Pt2",&vars[4]);
-  tuple->SetBranchAddress("Xf",&vars[5]);
-  tuple->SetBranchAddress("Xb",&vars[6]);
-  tuple->SetBranchAddress("YC",&vars[7]);
-  tuple->SetBranchAddress("PID",&vars[8]);
-  tuple->SetBranchAddress("Mass2",&vars[9]);;
-  tuple->SetBranchAddress("VC_TM",&vars[10]);
-  tuple->SetBranchAddress("NmbPion",&nmbPion);
+  std::string target = argv[1];
+  // Creating a array of chars instead of a string to use Form method
+  int n = target.length();
+  char targetArr[n + 1];
+  strcpy(targetArr, target.c_str());
+
+  TFile* file = new TFile(Form("~/proyecto/Pt2Broadening_multi-pion/Data/PiPlusData_%s.root", targetArr), "READ");
+  TNtuple* tuple = (TNtuple*)file->Get("ntuple_data");
+
+  int tmpCounter = 0; // Counts how many partivles there is in the event
+  float tmpEvnt, evnt, Q2Evnt, NuEvnt;
+  float tmpZh[5], tmpPt[5], tmpPhi[5] ;
+
+  const char* VarList = "Q2:Nu:Zh:Pt2:PhiPQ:YC:VC_TM";
+  // Variables to fill the tuple
+  float *vars         = new Float_t[7];
+  // Read the necesary variables
+  tuple->SetBranchAddress("Q2",&Q2Evnt);
+  tuple->SetBranchAddress("Nu",&NuEvnt);
+  tuple->SetBranchAddress("Zh",&vars[2]);
+  tuple->SetBranchAddress("Pt2",&vars[3]);
+  tuple->SetBranchAddress("PhiPQ",&vars[4]);
+  tuple->SetBranchAddress("YC",&vars[5]);
+  tuple->SetBranchAddress("VC_TM",&vars[6]);
+  tuple->SetBranchAddress("NEvnt",&evnt);
 
   gROOT->cd();
 
-  TNtuple *ntuple_1pion = new TNtuple("ntuple_1_pion","1 Pion pluses",VarList);
-  TNtuple *ntuple_2pion = new TNtuple("ntuple_2_pion","2 Pion pluses",VarList);
-  TNtuple *ntuple_3pion = new TNtuple("ntuple_3_pion","3 Pion pluses",VarList);
+  TNtuple* ntuplePion[5];
 
-  int tmpCounter = 0;
-  float tmpEvnt;
-  float tmpZh[4];
-  for(int i = 0; i < tuple->GetEntries() - 2 ; i++) {
+  for(int i = 0; i < 5; i++) {
+    ntuplePion[i] = new TNtuple(Form("ntuple_%i_pion", i + 1),"",VarList);
+  }
+
+  for(int i = 0; i < tuple->GetEntries() ; i++) { // Loops in every detected paricle
     tuple->GetEntry(i);
-    tmpEvnt = vars[0];
+    vars[0] = Q2Evnt;
+    vars[1] = NuEvnt;
+    tmpZh[0]  = vars[2];
+    tmpPt[0]  = TMath::Sqrt(vars[3]);
+    tmpPhi[0] = vars[4];
+    tmpEvnt = evnt;
     tuple->GetEntry(i + 1);
-    while(tmpEvnt == vars[0]) {
+    while(tmpEvnt == evnt) { // Check all the paricles in the event
       tmpCounter++;
-      tmpEvnt = vars[0];
+      tmpZh[tmpCounter]  = vars[2];
+      tmpPt[tmpCounter]  = TMath::Sqrt(vars[3]);
+      tmpPhi[tmpCounter] = vars[4];
+      if(i + 1 + tmpCounter >= tuple->GetEntries() ){ break; }
       tuple->GetEntry(i + 1 + tmpCounter);
     }
     if(tmpCounter == 0) {
       tuple->GetEntry(i);
-      vars[32] = 1;
-      ntuple_1pion->Fill(vars);
+      ntuplePion[0]->Fill(vars);
     }else {
-      vars[5] = 0;m
+      tuple->GetEntry(i);
+      vars[2] = 0;
       TVector2* vec = new TVector2(0,0);
       for(int k = 0; k <= tmpCounter; k++) {
         // Calculate de tranvers momentum vector
         TVector2 *tmpVec = new TVector2(tmpPt[k]*TMath::Cos((tmpPhi[k] + 180)*TMath::DegToRad()), tmpPt[k]*TMath::Sin((tmpPhi[k] + 180)*TMath::DegToRad()));
         // Sum the vector and save the sum of Zh
-        vars[5] += tmpZh[k];
+        vars[2] += tmpZh[k];
         *vec += *tmpVec;
         //vecTemp->Print();
         delete tmpVec;
       }
       // Save the Pt2 of the sum vector
-      vars[6] = std::pow(vec->Mod(),2);
+      vars[3] = std::pow(vec->Mod(),2);
       // Save the PhiPQ of the sum vector
-      vars[7] = vec->Phi()*TMath::RadToDeg()-180;
+      vars[4] = vec->Phi()*TMath::RadToDeg()-180;
       delete vec;
-
-    }
-    if(tmpCounter == 1) {
-      for(int j = 0; j <= tmpCounter; j++) {
-        tuple->GetEntry(i + j);
-        vars[32] = 1 + j;
-        ntuple_2pion->Fill(vars);
-      }
-    }
-    if(tmpCounter == 2){
-      for(int j = 0; j <= tmpCounter; j++) {
-        tuple->GetEntry(i + j);
-        vars[32] = 1 + j;
-        ntuple_3pion->Fill(vars);
-      }
+      ntuplePion[tmpCounter]->Fill(vars);
     }
     // Jump to the next event
     i += tmpCounter;
     tmpCounter = 0;
+  } // End paricle loop
+
+  // Save the tuples
+  TFile* fOutput = new TFile(Form("~/proyecto/Pt2Broadening_multi-pion/Data/VecSum_%s2.root", targetArr), "RECREATE");
+  fOutput->cd();
+
+  for(int i = 0; i < N_PION +1 ; i++) {
+    ntuplePion[i]->Write();
   }
 
-  TFile* fOutput = new TFile(outputName,"RECREATE");
-
-  fOutput->cd();
-  ntuple_1pion->Write();
-  ntuple_2pion->Write();
-  ntuple_3pion->Write();
   gROOT->cd();
   fOutput->Close();
-  cout << "Done." << endl;
-  delete ntuple_1pion;
-  delete ntuple_2pion;
-  delete ntuple_3pion;
+  std::cout << "Done." << std::endl;
   file->Close();
+  t.Print();
 
 }
