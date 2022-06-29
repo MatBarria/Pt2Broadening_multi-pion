@@ -9,8 +9,8 @@ int main(){
 
   TStopwatch t;
 
-  TString inputDirectory  = "/home/matias/proyecto/Pt2Broadening_multi-pion/Data/";
-  TString outputDirectory = "/home/matias/proyecto/Pt2Broadening_multi-pion/Data/";
+  TString inputDirectory  = "/home/matias/proyecto/Pt2Broadening_multi-pion/Data/Nubins/";
+  TString outputDirectory = "/home/matias/proyecto/Pt2Broadening_multi-pion/Data/Nubins/";
 
   std::cout << "PhiPQ integration" << std::endl;
   CallPhiIntegration(   inputDirectory , outputDirectory);
@@ -22,6 +22,8 @@ int main(){
   CallQ2ZhIntegration(  inputDirectory , outputDirectory);
   std::cout << "Q2, Nu and Zh integration" << std::endl;
   CallQ2NuZhIntegration(inputDirectory , outputDirectory);
+  std::cout << "Mean Pt2" << std::endl;
+  CallMeanPt2(inputDirectory, outputDirectory);
 
   t.Print();
 

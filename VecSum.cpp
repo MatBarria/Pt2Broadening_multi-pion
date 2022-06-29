@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   TNtuple* tuple = (TNtuple*)file->Get("ntuple_data");
 
   int tmpCounter = 0; // Counts how many partivles there is in the event
-  float tmpEvnt, evnt, Q2Evnt, NuEvnt;
+  float tmpEvnt, evnt, Q2Evnt, NuEvnt, ZhEvnt, Pt2Evnt, PhiEvnt, YCEvnt, VCEvnt;
   float tmpZh[5], tmpPt[5], tmpPhi[5] ;
 
   const char* VarList = "Q2:Nu:Zh:Pt2:PhiPQ:YC:VC_TM";
@@ -47,11 +47,11 @@ int main(int argc, char* argv[]) {
   // Read the necesary variables
   tuple->SetBranchAddress("Q2",&Q2Evnt);
   tuple->SetBranchAddress("Nu",&NuEvnt);
-  tuple->SetBranchAddress("Zh",&vars[2]);
-  tuple->SetBranchAddress("Pt2",&vars[3]);
-  tuple->SetBranchAddress("PhiPQ",&vars[4]);
-  tuple->SetBranchAddress("YC",&vars[5]);
-  tuple->SetBranchAddress("VC_TM",&vars[6]);
+  tuple->SetBranchAddress("Zh",&ZhEvnt);
+  tuple->SetBranchAddress("Pt2",&Pt2Evnt);
+  tuple->SetBranchAddress("PhiPQ",&PhiEvnt);
+  tuple->SetBranchAddress("YC",&YCEvnt);
+  tuple->SetBranchAddress("VC_TM",&VCEvnt);
   tuple->SetBranchAddress("NEvnt",&evnt);
 
   gROOT->cd();
@@ -66,16 +66,21 @@ int main(int argc, char* argv[]) {
     tuple->GetEntry(i);
     vars[0] = Q2Evnt;
     vars[1] = NuEvnt;
+    vars[2] = ZhEvnt;
+    vars[3] = Pt2Evnt;
+    vars[4] = PhiEvnt;
+    vars[5] = YCEvnt;
+    vars[6] = VCEvnt;
     tmpZh[0]  = vars[2];
-    tmpPt[0]  = TMath::Sqrt(vars[3]);
+    tmpPt[0]  = TMath::Sqrt(Pt2Evnt);
     tmpPhi[0] = vars[4];
     tmpEvnt = evnt;
     tuple->GetEntry(i + 1);
     while(tmpEvnt == evnt) { // Check all the paricles in the event
       tmpCounter++;
-      tmpZh[tmpCounter]  = vars[2];
-      tmpPt[tmpCounter]  = TMath::Sqrt(vars[3]);
-      tmpPhi[tmpCounter] = vars[4];
+      tmpZh[tmpCounter]  = ZhEvnt;
+      tmpPt[tmpCounter]  = TMath::Sqrt(Pt2Evnt);
+      tmpPhi[tmpCounter] = PhiEvnt;
       if(i + 1 + tmpCounter >= tuple->GetEntries() ){ break; }
       tuple->GetEntry(i + 1 + tmpCounter);
     }

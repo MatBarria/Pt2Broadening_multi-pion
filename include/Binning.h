@@ -3,7 +3,7 @@ const int N_Q2  = 3;
 const int N_Nu  = 3;
 const int N_Zh = 4;
 //const int N_Zh = 3;
- const int N_Pt2 = 90;
+const int N_Pt2 = 90;
 //const int N_Pt2 = 80;
 const int N_Phi = 6;
 const float Delta_PT2 = 3.0/N_Pt2;
@@ -18,17 +18,23 @@ const float Zh_MIN = 0.0;
 const float Zh_MAX = 1.0;
 const float Pt2_MIN = 0.0;
 const float Pt2_MAX = 3.0;
+// Bin of Zh to take in count in the integration
 const int ZH_SUM = 1;
 
-
 // Binning
-// const float Q2_BINS[N_Q2+1] = {1, 1.3, 1.8, 4.0};
-// const float Nu_BINS[N_Nu+1] = {2.2, 3.2, 3.7, 4.26};
+//const float Q2_BINS[N_Q2+1] = {1, 1.3, 1.8, 4.0};
 const float Q2_BINS[N_Q2+1] = {1, 1.29, 1.68, 4.0};
+
+//const float Nu_BINS[N_Nu+1] = {2.2, 3.2, 3.7, 4.26};
 const float Nu_BINS[N_Nu+1] = {2.2, 3.59, 3.96, 4.26};
+
 const float Zh_BINS[N_Zh+1] = {0, 0.2, 0.4, 0.6 ,1.0};
 //const float Zh_BINS[N_Zh+1] = {0, 0.2, 0.5, 1.0};
+//const float Zh_BINS[9] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6 , 0.8 , 1.0};
+
 const float Phi_BINS[N_Phi+1] = {-180, -120, -60, 0, 60, 120, 180};
+//const float Phi_BINS[N_Phi+1] = {-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180};
+
 const float Pt2_BINS[N_Pt2+1] = {0, 0.0333333, 0.0666667, 0.1, 0.133333, 0.166667, 0.2, 0.233333, 0.266667, 0.3, 0.333333,
                                 0.366667, 0.4, 0.433333, 0.466667, 0.5, 0.533333, 0.566667, 0.6, 0.633333, 0.666667, 0.7,
                                 0.733333, 0.766667, 0.8, 0.833333, 0.866667, 0.9, 0.933333, 0.966667, 1, 1.03333, 1.06667,
@@ -48,4 +54,7 @@ const float Pt2_BINS[N_Pt2+1] = {0, 0.0333333, 0.0666667, 0.1, 0.133333, 0.16666
 //                                 2.8875, 2.925, 2.9625, 3};
 
 
+
+const float Q2_BINS_E[4] = {1, 1.3, 1.8, 4.0};
+const float Nu_BINS_E[4] = {2.2, 3.2, 3.7, 4.26};
 const float Zh_BINS_E[9] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6 , 0.8 , 1.0};

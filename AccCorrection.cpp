@@ -37,11 +37,11 @@ int main(int argc, char* argv[]) {
       solidTarget[i] = targetArr[i+1];
     }
     //fileDataName = Form("/eos/user/m/mbarrial/Data/VecSum_%s.root", solidTarget);
-    fileDataName = Form("~/proyecto/Pt2Broadening_multi-pion/Data/VecSum_%s.root", solidTarget);
+    fileDataName = Form("~/proyecto/Pt2Broadening_multi-pion/Data/VecSum_%s2.root", solidTarget);
   } else{
     m = n+1;
     //fileDataName = Form("/eos/user/m/mbarrial/Data/VecSum_%s.root", targetArr);
-    fileDataName = Form("~/proyecto/Pt2Broadening_multi-pion/Data/VecSum_%s.root", targetArr);
+    fileDataName = Form("~/proyecto/Pt2Broadening_multi-pion/Data/VecSum_%s2.root", targetArr);
   }
 
   // Select the target of the simultion
@@ -65,9 +65,9 @@ int main(int argc, char* argv[]) {
 
   // Create some variables to use inside the for loops
   TString tupleDataName;
-  TCut Q2Cut, NuCut, ZhCut, Pt2Cut, VCData, cutsData, cutsSimul, GenCut, DecCut;
+  TCut Q2Cut, NuCut, ZhCut, Pt2Cut, VCData, cutsData, cutsSimul, GenCut, DecCut, GenDecCut;
   // Do not take in count events of 0 generated pion in the simultion beacause the is not hadrons variables to select a bin
-  TCut Gen1  = "Gen>0";
+  TCut Gen1  = "Gen!=0";
   TCut YCCut = "TMath::Abs(YC)<1.4";
   // Select liquid or solid target
   if(targetArr[0] == 'D') { VCData  = "VC_TM == 1.";}
@@ -92,8 +92,9 @@ int main(int argc, char* argv[]) {
 
   for(int gen = 1; gen <= N_PION ; gen++) { // Loops in every number of generated pions
 
-    GenCut = Form("Gen == %f", (float)gen);
-    DecCut = Form("Dec == %f", (float)gen);
+    GenCut    = Form("Gen == %f", (float)gen);
+    DecCut    = Form("Dec == %f", (float)gen);
+    GenDecCut = GenCut||DecCut;
 
     for(int Q2Counter = 0; Q2Counter < N_Q2; Q2Counter++) { // Loops in every Q2 bin
       for(int NuCounter = 0; NuCounter < N_Nu; NuCounter++) { // Loops in every Nu bin
@@ -107,9 +108,9 @@ int main(int argc, char* argv[]) {
           ZhCut   = Form("Zh>%f&&Zh<%f", Zh_BINS[ZhCounter],   Zh_BINS[ZhCounter+1]);
 
           cutsData  = Q2Cut&&NuCut&&ZhCut&&YCCut&&VCData;
-          cutsSimul = Q2Cut&&NuCut&&ZhCut&&Gen1;
+          cutsSimul = Q2Cut&&NuCut&&ZhCut&&Gen1&&GenDecCut;
 
-          TNtuple* ntupleData = (TNtuple*) fileData->Get(Form("ntuple_%i_pion", gen));
+          TNtuple* ntupleData  = (TNtuple*) fileData->Get(Form("ntuple_%i_pion", gen));
           TNtuple* ntupleSimul = (TNtuple*) fileSimul->Get("ntuple_sim");
 
           // Apply the cuts to the ntuples to increces the efficiency
@@ -125,7 +126,7 @@ int main(int argc, char* argv[]) {
             // Select the Pt2 bin
             Pt2Cut  = Form("Pt2>%f&&Pt2<%f", Pt2_BINS[Pt2Counter], Pt2_BINS[Pt2Counter+1]);
 
-            ntupleData->Project("Data","PhiPQ", Pt2Cut);
+            ntupleData->Project("Data", "PhiPQ", Pt2Cut);
             if(EmptyHist(histData) == 1){ continue; } // If there isn't any event in data skip this bin
             // Generate histograms of the all dectected pion, all generated pion, and the pions that was correct dectected
             ntupleSimul->Project("Detected",    "PhiPQ", Pt2Cut&&GenCut&&DecCut);
